@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Exception;
+use FindBin;
 
 BEGIN { use_ok("ReplaceTags"); }
 
@@ -25,8 +26,15 @@ is($rt->get_replacement_key('title'), 'Replace Tags', "The 'title' key has the c
 
 is( ref($rt->template_dir), 'Path::Tiny', 'Path::Tiny object is received.');
 
-my $default_path = $rt->template_dir();
-is ($default_path, '/Users/fy2/Experiments/SarahMcQuade/ReplaceTags/t/templates', 'Path::Tiny path is correct.');
+
+my $default_path = $rt->template_dir;
+# template dir defaults to the dir where the current script runs, i.e.:
+is($default_path, "$FindBin::RealBin/templates", 'Path::Tiny path is correct.');
+
+#let's change the dirname into "data":
+$rt->template_dir( Path::Tiny->new("$FindBin::RealBin/data") );
+
+is($rt->template_dir, "$FindBin::RealBin/data", 'Path::Tiny path is revised correctly.');
 
 
 done_testing();
