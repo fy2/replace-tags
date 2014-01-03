@@ -37,4 +37,5 @@ $rt->template_dir( Path::Tiny->new("$FindBin::RealBin/data") );
 is($rt->template_dir, "$FindBin::RealBin/data", 'Path::Tiny path is revised correctly.');
 
 
+
 done_testing();

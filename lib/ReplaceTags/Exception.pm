@@ -12,3 +12,8 @@ package ReplaceTags::Exception::ArgumentMissing;
 use Moose;
 extends 'ReplaceTags::Exception';
 no Moose;
+
+package ReplaceTags::Exception::DirDoesNotExist;
+use Moose;
+extends 'ReplaceTags::Exception';
+no Moose;
