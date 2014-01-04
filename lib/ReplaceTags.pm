@@ -4,8 +4,14 @@ use ReplaceTags::Exception;
 use Path::Tiny;
 use Data::Dumper;
 use FindBin;
+use Moose::Util::TypeConstraints;
 
- 
+has '_path_tiny_obj'    => (is => 'rw', isa => 'Path::Tiny');
+has 'backup'            => (is => 'rw', isa => 'Bool', default => 0);
+has 'suffix'            => (is => 'rw', isa => 'Str', default => '.tpl');
+has 'template_dir_path' => (  is => 'rw', isa => 'Str', default => 
+                              sub { return "$FindBin::RealBin/templates"; }
+                            , trigger => \&_create_path_tiny_object);    
 
 has 'replacements' => (
       traits => ['Hash']
@@ -18,47 +24,23 @@ has 'replacements' => (
           , get_replacement_key  => 'get'
           , set_replacement_key  => 'set'
     }
+    , required => 1
 );
 
-has 'template_dir' => (
-      is => 'rw'
-    , isa => 'Path::Tiny'
-    , builder => '_build_default_dir'
-);
 
-# Backwards compatibility
-# We provide a default dir to 'templates' dir
-sub _build_default_dir {
-    return Path::Tiny->new("$FindBin::RealBin/templates");
-}
-  
 sub run {
-    my $self;
-    my $replace_tags = ReplaceTags->new( @_ );
-    return $replace_tags;
+    my $replacements_href = shift;
+    
+    #TODO: this should execute the replacements!
+    return ReplaceTags->new( replacements => $replacements_href );    
 }
 
-# We enable here both HASH ref and list way of providing arguments.
-# The arguments are then passed to hash trait attribute "replacements"
-# which will consequently be accessible once the object is created.  
-around BUILDARGS => sub {
-    my $orig = shift;
-    my $class = shift;
-        
-    if ( scalar @_ == 1 and ref($_[0]) eq 'HASH' ) { #arguments were provided as a HASH ref:
-    
-        return $class->$orig( replacements => $_[0] );
-    }
-    elsif (scalar @_ >=2) { #list of "key=>value" pairs (without curly brackets):
-    
-        my %args = @_;
-        return $class->$orig( replacements => \%args );
-    }
-    else { #something is wrong:
-    
-        ReplaceTags::Exception::ArgumentMissing->throw("Replacement arguments missing.");
-    }          
-};
+
+
+sub _create_path_tiny_object {
+     my ( $self, $template_dir_path ) = @_;
+     $self->_path_tiny_obj( Path::Tiny->new($template_dir_path) );
+}
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
