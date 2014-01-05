@@ -4,7 +4,6 @@ use ReplaceTags::Exception;
 use Path::Tiny;
 use Data::Dumper;
 use FindBin;
-use Moose::Util::TypeConstraints;
 
 has '_path_tiny_obj'    => (is => 'rw', isa => 'Path::Tiny');
 has 'backup'            => (is => 'rw', isa => 'Bool', default => 0);
