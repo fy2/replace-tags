@@ -17,3 +17,8 @@ package ReplaceTags::Exception::DirDoesNotExist;
 use Moose;
 extends 'ReplaceTags::Exception';
 no Moose;
+
+package ReplaceTags::Exception::FileDoesNotExist;
+use Moose;
+extends 'ReplaceTags::Exception';
+no Moose;
