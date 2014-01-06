@@ -2,9 +2,9 @@ package CheckTemplateDir;
 use ReplaceTags::Exception;
 use Moose;
 
-has 'path_tiny_obj' => (
+has 'template_dir_path' => (
     is       => 'ro'
-  , isa      => 'Path::Tiny'
+  , isa      => 'Str'
   , required => 1
   );
 
@@ -14,18 +14,22 @@ has 'suffix' => (
   , required => 1
   );
   
-sub check_directory {
-    my $self = shift;
-    if (not $self->path_tiny_obj->exists) {
-        ReplaceTags::Exception::DirDoesNotExist->throw($self->path_tiny_obj->stringify . ' does not exist!');
-    }
+sub validate_directory {
     
+    my $self = shift;
+    
+    my $path_tiny_dir = Path::Tiny->new( $self->template_dir_path );
+    
+    if (not $path_tiny_dir->exists) {
+        ReplaceTags::Exception::DirDoesNotExist->throw($path_tiny_dir->stringify . ' does not exist!');
+    }
+
     my $suffix = $self->suffix;
-    if ( scalar $self->path_tiny_obj->children( qr/$suffix$/i )  == 0 ) {
+    if ( scalar $path_tiny_dir->children( qr/$suffix$/i )  == 0 ) {
         warn "No files with the '". $self->suffix . "' suffix found. Nothing will be done.";
     }
     
-    
+    return $path_tiny_dir;
 }
 
 no Moose;

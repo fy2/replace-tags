@@ -3,7 +3,7 @@
 <html>
    <head>
       <title>!title!</title>
-	  <meta HTTP-EQUIV="expires" CONTENT="!expires!">
+      <meta HTTP-EQUIV="expires" CONTENT="!expires!">
    </head>
    <body>
       <p>!content!</p>
