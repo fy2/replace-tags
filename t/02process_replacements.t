@@ -1,10 +1,11 @@
 use strict;
 use warnings;
-use Test::More;
+use Test::More  tests => 9;
 use Test::Exception;
 use Test::Differences;
+use Test::MockObject;
+use Data::Dumper;
 use FindBin;
-use Replacement;
 use ReplaceTags;
 
 BEGIN { use_ok("ProcessReplacement"); }
@@ -13,40 +14,78 @@ BEGIN { use_ok("ProcessReplacement"); }
 
 my $process = ProcessReplacement->new();
 isa_ok($process, 'ProcessReplacement');
-
 can_ok($process, 'run_replacements');
+can_ok($process, '_get_tags_and_values');
 
+
+##################################
+# Testing: '_get_tags_and_values'#
+##################################
+my $mock_replace_tags_obj = Test::MockObject->new();
+$mock_replace_tags_obj->mock( 'keys_in_replacements' => sub { return sort qw(content expires title) });
+$mock_replace_tags_obj->mock( 'backup'               => sub { return 0; });
+$mock_replace_tags_obj->mock( 'template_dir_path'    => sub { return "$FindBin::RealBin/data"; });
+$mock_replace_tags_obj->mock( 'suffix'               => sub { return '.tpl'; });
+$mock_replace_tags_obj->mock( 'tag_wrapper'          => sub { return '!'} );
+$mock_replace_tags_obj->mock( 'get_replacement_key'  => sub {
+    my ($mock, $tag) = @_;
+    my %replacement = ('expires' => 'Mon, 31 Dec 2012 12:00:00 GMT'
+                      , 'title'   => 'Replace Tags'
+                      , 'content' => 'Hello, World!');                       
+    return $replacement{$tag};  
+});
+my $expected_array_ref = [ [qr/!content!/i, 'Hello, World!']
+                         , [qr/!expires!/i, 'Mon, 31 Dec 2012 12:00:00 GMT']
+                         , [qr/!title!/i, 'Replace Tags'] 
+                         ];
+                          
+eq_or_diff $process->_get_tags_and_values($mock_replace_tags_obj)
+         , $expected_array_ref
+         , 'Tags are Correctly quoted + turned into regexps and stored in array of arrays';
+
+
+###########################
+# Testing: '_replace_tags'#
+###########################
+my $input_file  = Path::Tiny->new("$FindBin::RealBin/data/home.tpl");
+my $output_file = Path::Tiny->tempfile( TEMPLATE => "temporaryXXXXXXXX");
+$process->_replace_tags($expected_array_ref, $input_file, $output_file);
+
+eq_or_diff $output_file->slurp, get_expected_string(), "Testing if replacements went well";
+
+
+##############################
+# Testing: 'run_replacements'#
+##############################
 throws_ok { $process->run_replacements } 'ReplaceTags::Exception::ArgumentMissing', 'Exception is raised if a ReplaceTags object is not provided.';
+$process->run_replacements($mock_replace_tags_obj);
+
+# As "backup => 0", input file will have been modified by "run_replacement".
+eq_or_diff $input_file->slurp, get_expected_string(), "Testing if replacements went well";
+
+# Restore input file (write the tags back)
+$input_file->spew( get_original_string() );
 
 
-my %replacements = ( expires => 'Mon, 31 Dec 2012 12:00:00 GMT'
-                   , title   => 'Replace Tags'
-                   , content => 'Hello, World!');
-                   
-my $replace_tags = ReplaceTags->new( replacements => \%replacements
-                                   , suffix => '.tpl'
-                                   , template_dir_path => "$FindBin::RealBin/data"
-                                   , tag_wrapper => '!'
-                                   , backup => 0 );
+##################################################
+# Testing: 'run_replacements' with backup enabled#
+##################################################
 
-#carry out the actual replacements:
-$process->run_replacements($replace_tags); 
+my $bak_filename = $input_file . '.bak';
+my $bak_file =Path::Tiny->new($bak_filename);
+$bak_file->remove;
+
+$mock_replace_tags_obj->mock( 'backup' => sub { return 1; } );
+$process->run_replacements($mock_replace_tags_obj);
+is ( Path::Tiny->new($bak_file)->is_file, 1, 'Backup file was created.');
+
+# Restore test data file dir
+$bak_file->remove;
+$input_file->spew( get_original_string() );
 
 
-open my $fh, "$FindBin::RealBin/data/home.tpl" or die "cannot open file $!";
-my $replaced_string;
-while(<$fh>) {
-    $replaced_string .= $_;
-}
-close $fh;
 
-my $expected_string = get_expected_string();
 
-eq_or_diff $replaced_string, $expected_string, "Testing if replacements went well";
-
-revert_replacements("$FindBin::RealBin/data/home.tpl");
-
-done_testing();
 
 
 sub get_expected_string {
@@ -79,11 +118,4 @@ sub get_original_string {
    </body>
 </html>
 END
-}
-
-sub revert_replacements {
-    my $file = shift;
-    open my $fhandle, ">$file" or die $!;
-    print $fhandle  get_original_string();
-    close $fhandle;
 }
