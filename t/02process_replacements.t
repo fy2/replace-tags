@@ -24,7 +24,7 @@ can_ok($process, '_get_tags_and_values');
 my $mock_replace_tags_obj = Test::MockObject->new();
 $mock_replace_tags_obj->mock( 'keys_in_replacements' => sub { return sort qw(content expires title) });
 $mock_replace_tags_obj->mock( 'backup'               => sub { return 0; });
-$mock_replace_tags_obj->mock( 'template_dir_path'    => sub { return "$FindBin::RealBin/data"; });
+$mock_replace_tags_obj->mock( 'template_dir_path'    => sub { return "$FindBin::RealBin/templates"; });
 $mock_replace_tags_obj->mock( 'suffix'               => sub { return '.tpl'; });
 $mock_replace_tags_obj->mock( 'tag_wrapper'          => sub { return '!'} );
 $mock_replace_tags_obj->mock( 'get_replacement_key'  => sub {
@@ -47,7 +47,7 @@ eq_or_diff $process->_get_tags_and_values($mock_replace_tags_obj)
 ###########################
 # Testing: '_replace_tags'#
 ###########################
-my $input_file  = Path::Tiny->new("$FindBin::RealBin/data/home.tpl");
+my $input_file  = Path::Tiny->new("$FindBin::RealBin/templates/home.tpl");
 my $output_file = Path::Tiny->tempfile( TEMPLATE => "temporaryXXXXXXXX");
 $process->_replace_tags($expected_array_ref, $input_file, $output_file);
 
@@ -70,7 +70,6 @@ $input_file->spew( get_original_string() );
 ##################################################
 # Testing: 'run_replacements' with backup enabled#
 ##################################################
-
 my $bak_filename = $input_file . '.bak';
 my $bak_file =Path::Tiny->new($bak_filename);
 $bak_file->remove;
@@ -82,10 +81,6 @@ is ( Path::Tiny->new($bak_file)->is_file, 1, 'Backup file was created.');
 # Restore test data file dir
 $bak_file->remove;
 $input_file->spew( get_original_string() );
-
-
-
-
 
 
 sub get_expected_string {
