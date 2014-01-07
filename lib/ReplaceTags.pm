@@ -43,3 +43,49 @@ sub run {
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
+
+=head1 NAME
+
+ReplaceTags
+
+=head1 SYNOPSIS
+
+    use ReplaceTags;
+    
+    # OOP way:
+    my %replacements = (
+      expires => 'Mon, 31 Dec 2012 12:00:00 GMT'
+    , title   => 'Replace Tags'
+    , content => 'Hello, World!');
+    
+    my $replace_tags = ReplaceTags->new( 
+      replacements => \%replacements               # This is a required paramater.
+    , suffix       => '.tpl'                       # defaults to '.tpl'
+    , template_dir_path => '/path/to/template/dir' # defaults to 'templates' in script bin dir.
+    , backup => 0                                  # defaults to 0 (i.e. no backup)
+    , tag_wrapper => '!'                           # defaults to '!' 
+    );
+    
+    $replace_tags->run();
+    
+    
+    # Non OOP way:
+    ReplaceTags::run(\%replacements);
+    
+=head1 DESCRIPTION
+
+This module is used to replace tags
+in a directory of template files with 
+a set of values.
+
+=head2 Methods
+
+=over 12
+
+=item C<run>
+
+This method carries out the replacements.
+
+=back
+
+=cut

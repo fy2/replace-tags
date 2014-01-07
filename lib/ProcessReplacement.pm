@@ -78,3 +78,48 @@ sub _get_tags_and_values {
                   
 no Moose;
 __PACKAGE__->meta->make_immutable;
+
+
+=head1 NAME
+
+ProcessReplacement
+
+=head1 SYNOPSIS
+
+    use ProcessReplacement;
+    
+    my $processor = ProcessReplacement->new();
+    $processor->run_replacements($replace_tags_obj);
+     
+    
+=head1 DESCRIPTION
+
+This module does carry out the actual replacements
+according to the parameters of a "ReplaceTags" object.
+ReplaceTags object has to be provided to its 
+"run_replacements" method as shown above.
+
+=head2 Methods
+
+=over 12
+
+=item C<run_replacements>
+
+This carries out the actual replacements.
+It will use the options provided by ReplaceTags obj.
+
+=item C<_get_tags_and_values>
+
+This returns an array of arrays. The arrays contain
+individual tag/value pairs where the tag strings are
+converted into Regexp objects (using perl's 'qr' operator). 
+
+=item C<_replace_tags>
+
+This uses the array of arrays (mentioned above) on a given
+input file in order to replace the tags with values. It writes
+its output to another output file. 
+
+=back
+
+=cut
