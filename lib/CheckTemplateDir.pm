@@ -1,5 +1,6 @@
 package CheckTemplateDir;
 use ReplaceTags::Exception;
+use MooseX::StrictConstructor;
 use Moose;
 
 has 'template_dir_path' => (
